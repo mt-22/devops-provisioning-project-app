@@ -1,0 +1,33 @@
+name: Deploy Web App
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Configure SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
+
+      - name: Deploy to EC2
+        runs: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} '
+
+            echo "Connected to EC2. Pulling latest from source..."
+            cd /tmp/devops-app || git clone https://github.com/mt-22/devops-provisioning-project-app.git /tmp/devops-app
+
+            cd /tmp/devops-app
+
+            git pull origin main
+
+            echo "Deploying app..."
+            sudo cp /tmp/devops-app/index.html /var/www/html/index.html
+
+            echo "Deployment complete" 
+          '
