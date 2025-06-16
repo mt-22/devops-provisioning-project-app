@@ -6,9 +6,26 @@ on:
       - master
 
 jobs:
-  deploy:
+  build:
+    name: Build and Scan
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
+      # Initializes the CodeQL tools for scanning.
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: html 
+
+      # Runs the actual analysis
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
     steps:
       - name: Configure SSH
         uses: webfactory/ssh-agent@v0.9.0
