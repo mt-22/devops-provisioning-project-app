@@ -3,7 +3,7 @@ name: Deploy Web App
 on:
   push:
     branches:
-      - master
+      - main
 
 permissions:
   security-events: write
@@ -16,19 +16,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
-          languages: javascript 
+          languages: javascript
 
-      # Runs the actual analysis
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
-      
-      # Scan for hardcoded secrets
-       - name: Perform Secret Scan
-         uses: gitleaks/gitleaks-action@v2
+
+      # This simplified step fails the build if secrets are found
+      - name: Perform Secret Scan
+        uses: gitleaks/gitleaks-action@v2
 
   deploy:
     needs: build
@@ -42,16 +40,11 @@ jobs:
       - name: Deploy to EC2
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} '
-
-            echo "Connected to EC2. Pulling latest from source..."
+            echo "Connected to EC2. Pulling latest code..."
             cd /tmp/devops-app || git clone https://github.com/mt-22/devops-provisioning-project-app.git /tmp/devops-app
-
             cd /tmp/devops-app
-
             git pull origin master
-
-            echo "Deploying app..."
-            sudo cp /tmp/devops-app/index.html /var/www/html/index.html
-
-            echo "Deployment complete" 
+            echo "Deploying new version..."
+            sudo cp index.html /var/www/html/index.html
+            echo "Deployment complete."
           '
